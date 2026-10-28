@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f3ef" />
+    <title>Libracional — Laboratório de câmera</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="camera.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Libracional, início">
+          <span class="brand-mark" aria-hidden="true">L</span>
+          <span>Libracional</span>
+        </a>
+        <span class="phase-label"><span class="phase-dot"></span> Etapa 4 · classificador experimental</span>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">LABORATÓRIO DE VISÃO COMPUTACIONAL</p>
+        <h1 id="page-title">Agora o app tenta reconhecer as letras.</h1>
+        <p class="intro-copy">O primeiro classificador compara os pontos da sua mão com as amostras A, B, L e Y da sessão de treino. As previsões são exploratórias até validarmos outra sessão.</p>
+      </section>
+
+      <section class="workspace" aria-label="Teste da câmera">
+        <div class="camera-panel">
+          <div class="camera-heading">
+            <div>
+              <p class="panel-kicker">PRÉ-VISUALIZAÇÃO</p>
+              <h2>Sua câmera</h2>
+            </div>
+            <span id="camera-status" class="status-pill" data-state="idle" role="status">
+              <span class="status-dot"></span><span id="status-text">Desligada</span>
+            </span>
+          </div>
+
+          <div class="video-frame" id="video-frame">
+            <video id="camera-video" autoplay playsinline muted aria-label="Imagem ao vivo da câmera"></video>
+            <canvas id="hand-overlay" aria-hidden="true"></canvas>
+            <div class="camera-placeholder" id="camera-placeholder">
+              <div class="camera-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" fill="none"><rect x="5" y="12" width="27" height="24" rx="5"/><path d="m32 20 11-6v20l-11-6V20Z"/><circle cx="18.5" cy="24" r="6"/></svg>
+              </div>
+              <p class="placeholder-title">A imagem da câmera aparecerá aqui</p>
+              <p class="placeholder-copy">Ao iniciar, o navegador pedirá sua permissão.</p>
+            </div>
+            <div class="video-tag" id="video-tag" hidden><span></span> AO VIVO</div>
+          </div>
+
+          <div class="camera-actions">
+            <button id="start-camera" class="primary-button" type="button">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6V4Z" fill="currentColor"/></svg>
+              Iniciar câmera
+            </button>
+            <button id="stop-camera" class="secondary-button" type="button" disabled>Desligar</button>
+          </div>
+          <p id="camera-message" class="camera-message" aria-live="polite">A câmera só será ligada quando você clicar no botão.</p>
+          <div class="hand-tools">
+            <button id="detect-hand" class="detect-button" type="button" disabled>Detectar mão</button>
+            <p id="hand-message" class="hand-message" aria-live="polite">A detecção ainda não está ativa.</p>
+          </div>
+
+          <section class="prediction-card" aria-live="polite" aria-label="Previsão experimental da letra">
+            <div>
+              <p class="panel-kicker">CLASSIFICADOR EM TESTE</p>
+              <p class="prediction-label">Previsão</p>
+            </div>
+            <strong id="prediction-output">—</strong>
+            <div class="agreement-block"><span>Concordância</span><strong id="prediction-agreement">—</strong></div>
+            <p id="prediction-detail" class="prediction-detail">Acordo entre os exemplos mais próximos; não é uma probabilidade calibrada.</p>
+          </section>
+
+          <section class="dataset-card" aria-labelledby="dataset-title">
+            <div class="dataset-heading">
+              <div>
+                <p class="panel-kicker">PRÓXIMO EXPERIMENTO</p>
+                <h2 id="dataset-title">Coleta piloto</h2>
+              </div>
+              <span class="sample-total" id="sample-total">0 amostras</span>
+            </div>
+            <p class="dataset-copy">Com a mão detectada, escolha o rótulo e capture uma vez. Use OUTRA para uma pose visível que não corresponda às formas válidas de A, B, L ou Y. Guardamos os 21 pontos — não a imagem.</p>
+            <label class="session-label" for="session-name">Nome da sessão</label>
+            <input id="session-name" class="session-input" type="text" value="sessao-3-teste" maxlength="30" autocomplete="off" />
+            <div class="capture-grid" aria-label="Capturar uma amostra com o rótulo escolhido">
+              <button class="capture-button" data-class="A" type="button" disabled><strong>A</strong><span id="count-A">0 / 30</span></button>
+              <button class="capture-button" data-class="B" type="button" disabled><strong>B</strong><span id="count-B">0 / 30</span></button>
+              <button class="capture-button" data-class="L" type="button" disabled><strong>L</strong><span id="count-L">0 / 30</span></button>
+              <button class="capture-button" data-class="Y" type="button" disabled><strong>Y</strong><span id="count-Y">0 / 30</span></button>
+              <button class="capture-button other-class" data-class="OUTRA" type="button" disabled><strong>OUTRA</strong><span id="count-OUTRA">0 / 20</span></button>
+            </div>
+            <div class="dataset-actions">
+              <button id="export-dataset" class="export-button" type="button" disabled>Baixar dados JSON</button>
+              <button id="clear-dataset" class="clear-button" type="button" disabled>Apagar coleta</button>
+            </div>
+            <p id="dataset-message" class="dataset-message" aria-live="polite">As capturas ficam na memória desta página; baixe o JSON antes de fechar ou atualizar.</p>
+          </section>
+        </div>
+
+        <aside class="side-panel">
+          <div class="lesson-card">
+            <span class="lesson-number">01</span>
+            <div>
+              <p class="panel-kicker">O QUE ESTAMOS APRENDENDO</p>
+              <h2>Câmera e mão</h2>
+            </div>
+            <p class="lesson-copy">A primeira parte é receber o vídeo. Agora vamos testar os 21 pontos que o MediaPipe estima na mão. O processamento acontece nesta página.</p>
+          </div>
+
+          <div class="next-card">
+            <div class="next-icon" aria-hidden="true">✳</div>
+            <div>
+              <p class="panel-kicker">PRÓXIMA ETAPA</p>
+              <h3>Entender os pontos</h3>
+              <p>Os pontos descrevem articulações. Ainda não identificam as letras A, B, L ou Y.</p>
+            </div>
+            <span class="lock-mark" aria-label="Aguardando etapa atual">⌑</span>
+          </div>
+        </aside>
+      </section>
+
+      <footer class="page-footer">
+        <span>Protótipo local de estudo</span>
+        <span class="footer-separator">·</span>
+        <span>Etapa 4 de 7</span>
+        <span class="footer-note">Vídeo local · coordenadas só ao capturar</span>
+      </footer>
+    </main>
+  </body>
+</html>
