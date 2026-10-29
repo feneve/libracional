@@ -1,5 +1,5 @@
-const VALID_CLASSES = new Set(['A', 'B', 'L', 'Y', 'OUTRA']);
-const K_NEIGHBORS = 5;
+const VALID_CLASSES = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I', 'L', 'M', 'O', 'Y', 'OUTRA']);
+const K_NEIGHBORS = 7;
 
 /**
  * Move the wrist to the origin, scale by palm length, and reflect one hand
@@ -46,7 +46,7 @@ export function createKnnModel(dataset) {
     }));
 
   if (samples.length === 0) {
-    throw new Error('Não encontrei amostras válidas das classes A, B, L e Y.');
+    throw new Error('Não encontrei amostras válidas nas classes permitidas.');
   }
 
   return { samples, k: K_NEIGHBORS };

@@ -21,7 +21,7 @@ up<!doctype html>
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">LABORATÓRIO DE VISÃO COMPUTACIONAL</p>
         <h1 id="page-title">Agora o app tenta reconhecer as letras.</h1>
-        <p class="intro-copy">O primeiro classificador compara os pontos da sua mão com as amostras A, B, L e Y da sessão de treino. As previsões são exploratórias até validarmos outra sessão.</p>
+        <p class="intro-copy">O classificador experimental trabalha com A, B, C, D, E, F, G, I, L, M, O, Y e OUTRA. A coleta de G, I, M e O está pronta; essas letras só serão previstas depois que seus exemplos forem incluídos no treino.</p>
       </section>
 
       <section class="workspace" aria-label="Teste da câmera">
@@ -68,8 +68,8 @@ up<!doctype html>
               <p class="prediction-label">Previsão</p>
             </div>
             <strong id="prediction-output">—</strong>
-            <div class="agreement-block"><span>Concordância</span><strong id="prediction-agreement">—</strong></div>
-            <p id="prediction-detail" class="prediction-detail">Acordo entre os exemplos mais próximos; não é uma probabilidade calibrada.</p>
+            <div class="tally-block"><span>Apuração</span><strong id="prediction-tally">—</strong></div>
+            <p id="prediction-detail" class="prediction-detail">A previsão aparece quando uma classe se repete em 3 dos últimos 5 quadros. A apuração é a votação dos 7 vizinhos, não a taxa de acerto.</p>
           </section>
 
           <section class="dataset-card" aria-labelledby="dataset-title">
@@ -80,13 +80,21 @@ up<!doctype html>
               </div>
               <span class="sample-total" id="sample-total">0 amostras</span>
             </div>
-            <p class="dataset-copy">Com a mão detectada, escolha o rótulo e capture uma vez. Use OUTRA para uma pose visível que não corresponda às formas válidas de A, B, L ou Y. Guardamos os 21 pontos — não a imagem.</p>
+            <p class="dataset-copy">Com a mão detectada, escolha o rótulo correto e capture uma pose por vez. Para G, I, M e O, tente chegar a 30 exemplos por letra, equilibrando as mãos. Use OUTRA para uma pose fora das classes válidas. Guardamos os 21 pontos, não a imagem.</p>
             <label class="session-label" for="session-name">Nome da sessão</label>
-            <input id="session-name" class="session-input" type="text" value="sessao-3-teste" maxlength="30" autocomplete="off" />
+            <input id="session-name" class="session-input" type="text" value="sessao-11-treino-gimo" maxlength="30" autocomplete="off" />
             <div class="capture-grid" aria-label="Capturar uma amostra com o rótulo escolhido">
               <button class="capture-button" data-class="A" type="button" disabled><strong>A</strong><span id="count-A">0 / 30</span></button>
               <button class="capture-button" data-class="B" type="button" disabled><strong>B</strong><span id="count-B">0 / 30</span></button>
+              <button class="capture-button" data-class="C" type="button" disabled><strong>C</strong><span id="count-C">0 / 30</span></button>
+              <button class="capture-button" data-class="D" type="button" disabled><strong>D</strong><span id="count-D">0 / 30</span></button>
+              <button class="capture-button" data-class="E" type="button" disabled><strong>E</strong><span id="count-E">0 / 30</span></button>
+              <button class="capture-button" data-class="F" type="button" disabled><strong>F</strong><span id="count-F">0 / 30</span></button>
+              <button class="capture-button" data-class="G" type="button" disabled><strong>G</strong><span id="count-G">0 / 30</span></button>
+              <button class="capture-button" data-class="I" type="button" disabled><strong>I</strong><span id="count-I">0 / 30</span></button>
               <button class="capture-button" data-class="L" type="button" disabled><strong>L</strong><span id="count-L">0 / 30</span></button>
+              <button class="capture-button" data-class="M" type="button" disabled><strong>M</strong><span id="count-M">0 / 30</span></button>
+              <button class="capture-button" data-class="O" type="button" disabled><strong>O</strong><span id="count-O">0 / 30</span></button>
               <button class="capture-button" data-class="Y" type="button" disabled><strong>Y</strong><span id="count-Y">0 / 30</span></button>
               <button class="capture-button other-class" data-class="OUTRA" type="button" disabled><strong>OUTRA</strong><span id="count-OUTRA">0 / 20</span></button>
             </div>
@@ -112,8 +120,8 @@ up<!doctype html>
             <div class="next-icon" aria-hidden="true">✳</div>
             <div>
               <p class="panel-kicker">PRÓXIMA ETAPA</p>
-              <h3>Entender os pontos</h3>
-              <p>Os pontos descrevem articulações. Ainda não identificam as letras A, B, L ou Y.</p>
+              <h3>Coletar novas letras</h3>
+              <p>O detector localiza os pontos; precisamos de exemplos rotulados para ensinar o classificador cada nova letra.</p>
             </div>
             <span class="lock-mark" aria-label="Aguardando etapa atual">⌑</span>
           </div>

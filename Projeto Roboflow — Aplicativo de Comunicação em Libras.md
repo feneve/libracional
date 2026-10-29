@@ -2,8 +2,8 @@
 
 > Roteiro de construção passo a passo. Atualizar o checklist e o registro de decisões ao concluir cada etapa, para que o projeto possa ser retomado em outra sessão.
 
-**Última atualização:** 28/10/2026  
-**Status geral:** Protótipo web local funcional: webcam, landmarks e classificador A/B/L/Y/OUTRA já foram experimentados pelo usuário. Após adicionar exemplos OUTRA da mão direita, o usuário relatou melhora nessa mão, mas ainda há previsões erradas em algumas poses com ambas as mãos. A avaliação independente ainda está pendente.  
+**Última atualização:** 29/10/2026  
+**Status geral:** Protótipo web local funcional: webcam, landmarks e classificador A/B/C/D/E/F/G/I/L/M/O/Y/OUTRA. O treino contém 2.523 amostras nas classes existentes; o k-NN usa 7 vizinhos. Após incluir 43 exemplos A/Left, o usuário informou que validou e passou. G/I/M/O estão prontas para coleta, mas ainda sem amostras e portanto sem previsão. A validação é qualitativa, sem métricas registradas; o teste independente continua pendente. O usuário encerrou a sessão antes da coleta das novas letras. Novos JSONs são incluídos no treino por padrão, salvo se forem explicitamente reservados para avaliação.  
 **Objetivo:** construir um protótipo local de estudo que use a câmera do celular para reconhecer algumas letras estáticas do alfabeto manual de Libras.
 
 ---
@@ -35,10 +35,10 @@ O alfabeto manual tem letras que dependem de movimento. No primeiro MVP, escolhe
 
 - **Tipo de projeto:** protótipo local de estudo, sem publicação em lojas.
 - **Custo pretendido:** R$ 0 em serviços e ferramentas, usando opções gratuitas e execução local.
-- **Escopo inicial:** poucas letras estáticas, não o alfabeto inteiro.
+- **Escopo atual:** A/B/C/D/E/F/L/Y têm exemplos no treino; G/I/M/O foram escolhidas para a próxima coleta. O objetivo continua limitado a letras estáticas, não ao alfabeto inteiro.
 - **Caminho técnico inicial a avaliar:** MediaPipe para localizar pontos da mão e um classificador próprio para reconhecer as letras.
 - **Onde o classificador roda:** dentro do navegador, no mesmo protótipo web; sem backend e sem enviar frames para serviço de inferência.
-- **Classificador do piloto:** k-NN (k vizinhos mais próximos) sobre landmarks normalizados. O código está em `classifier.js`; o conjunto de referência fica em `data/pilot/treino-sessao-1.json`.
+- **Classificador do piloto:** k-NN (k vizinhos mais próximos) sobre landmarks normalizados, atualmente com `k=7`. O código está em `classifier.js`; o conjunto consolidado usado pelo app é `data/pilot/treino.json`, gerado a partir dos arquivos organizados em `data/pilot/fontes/sessoes/`.
 - **Roboflow:** opcional para aprender organização/anotação de imagens e experimentar treinamento. Não é requisito e não usaremos inferência hospedada como dependência do app.
 - **Teachable Machine:** possível exercício rápido para entender classificação, não decisão de arquitetura final.
 - **Execução:** começar pelo ambiente que estiver disponível; confirmar sistema operacional, celular e ferramentas antes de escolher framework definitivo.
@@ -95,7 +95,7 @@ arquivo JSON: contém os exemplos usados pelo classificador
 interface: mostra A, B, L ou Y, ou “incerto/sem mão”
 ```
 
-Para o piloto usamos k-NN (*k-nearest neighbors*, ou k vizinhos mais próximos). Em vez de treinar uma rede neural, o algoritmo guarda os exemplos rotulados de treino. Para uma nova mão, compara seus landmarks normalizados com os exemplos e escolhe a classe mais comum entre os cinco mais próximos. Com apenas quatro classes e um conjunto pequeno, é uma escolha simples de inspecionar e executar no navegador. O arquivo de teste deve permanecer separado e não entrar nessa comparação durante a avaliação.
+Para o piloto usamos k-NN (*k-nearest neighbors*, ou k vizinhos mais próximos). Em vez de treinar uma rede neural, o algoritmo guarda os exemplos rotulados de treino. Para uma nova mão, compara seus landmarks normalizados com os exemplos e escolhe a classe mais comum entre os sete mais próximos. O valor de `k` é experimental e precisa ser comparado com dados de avaliação separados do treino.
 
 Isso significa que “treinar” o k-NN é preparar e guardar os exemplos de referência; o cálculo da classe acontece no aparelho/navegador quando uma nova pose chega. `classifier.js` e o JSON já existem no projeto. Se o conjunto inicial mostrar que k-NN não atende, poderemos comparar outro classificador depois.
 
@@ -169,7 +169,7 @@ Uma etapa só recebe `[x]` quando o resultado indicado foi alcançado e conferid
 - [x] Normalizar os pontos da mão para reduzir efeitos de posição e escala.
 - [x] Implementar um k-NN simples com as classes escolhidas.
 - [x] Ligar o k-NN ao fluxo ao vivo e mostrar a previsão ou incerteza.
-- [x] Mostrar percentual de concordância dos cinco vizinhos, com aviso de que não é probabilidade calibrada.
+- [x] Mostrar o percentual dos votos dos vizinhos, explicado como contagem e não como chance de acerto.
 - [x] Adicionar uma classe `OUTRA` ao conjunto usado pelo classificador, para permitir rejeição aprendida de poses fora de A/B/L/Y.
 - [ ] Conferir as previsões ao vivo em poses novas; elas ainda são exploratórias.
 - [ ] Avaliar em exemplos que não entraram no treino, por letra e por mão.
@@ -182,7 +182,8 @@ Uma etapa só recebe `[x]` quando o resultado indicado foi alcançado e conferid
 
 - [x] Executar classificador junto da câmera.
 - [x] Mostrar classe e indicador de incerteza.
-- [ ] Adicionar filtro temporal para reduzir oscilações entre previsões.
+- [x] Implementar filtro temporal de maioria para reduzir oscilações entre previsões.
+- [ ] Conferir ao vivo se o filtro reduz oscilações sem atraso excessivo.
 - [x] Mostrar estado “mão não detectada” ou “sinal incerto”.
 - [ ] Medir se a experiência responde em tempo útil no dispositivo disponível.
 
@@ -260,6 +261,7 @@ Consultadas em 26/10/2026; planos e limites podem mudar.
 - [Google Colab FAQ](https://research.google.com/colaboratory/faq.html)
 - [INES — Alfabeto de Libras e Configuração de Mãos](https://www.gov.br/ines/pt-br/central-de-conteudos/publicacoes-1/todas-as-publicacoes/alfabeto-manual-e-configuracao-de-maos)
 - [Centro Paula Souza/SIA — Alfabeto Manual em Libras, com imagem do alfabeto](https://sia.cps.sp.gov.br/alfabeto-manual-em-libras/)
+- [UTFPR — estudo sobre reconhecimento de gestos de Libras com alfabeto manual; identifica H, J, K, X, Y e Z como dinâmicas](https://repositorio.utfpr.edu.br/jspui/bitstream/1/5018/1/luvainstrumentadagestoslibras.pdf)
 - [MediaPipe Hand Landmarker para Web/JavaScript](https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/web_js)
 - [MediaPipe Hands — nota sobre handedness e entrada espelhada](https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/hands.md?plain=1)
 
@@ -464,6 +466,133 @@ Consultadas em 26/10/2026; planos e limites podem mudar.
 - **Limite do processo:** exemplos adicionais podem ajudar o k-NN a cobrir poses parecidas, mas não garantem reconhecimento geral. Repetir a avaliação em poses novas para verificar se a melhora se mantém.
 - **Direção futura discutida:** Flutter poderá reutilizar o protótipo web numa WebView ou portar o fluxo para processamento local no app (câmera, MediaPipe e classificador). Não foi tomada decisão de arquitetura; primeiro validar melhor os dados e o reconhecimento no protótipo.
 - **Próximo passo:** registrar erros recorrentes e coletar exemplos de treino específicos para eles, sem misturar os dados reservados para avaliação independente.
+
+### 2026-10-29 — Poses classificadas incorretamente coletadas como OUTRA
+
+- **Esclarecimento do usuário:** as cinco exportações novas contêm poses em que o app mostrava uma letra, mas a saída esperada é `OUTRA`; portanto, o rótulo `OUTRA` presente nas amostras está correto. Os nomes das sessões A/B/L/Y identificam os grupos/experimentos, não o rótulo correto.
+- **Arquivos:** as cinco exportações são cumulativas. A mais recente contém 214 amostras no total: grupos de sessão A (30), B (67), L (36), Y (37) e `aleatorio` (44), todas rotuladas OUTRA. Os arquivos têm 21 landmarks por amostra e coordenadas finitas.
+- **Deduplicação operacional:** os cinco arquivos originais foram preservados. Foi criada `data/pilot/rejeicoes-sessao-4.json` como cópia da exportação mais recente; o app carrega apenas essa cópia, não as cinco exportações, para evitar duplicação.
+- **Metadado observado:** 212 amostras estão marcadas `Left` e 2 `Right`, apesar de a coleta ter sido descrita como feita com a mão esquerda. Os metadados originais foram preservados; conferir a lateralidade nos próximos testes.
+- **Integração:** o conjunto total passa a ter 479 amostras (140 A/B/L/Y + 339 OUTRA), se todos os quatro arquivos de treino estiverem disponíveis. Recarregar a página para carregar o novo arquivo.
+- **Próximo passo:** observar se essas poses recorrentes passam a ser rejeitadas como OUTRA com ambas as mãos. Depois avaliar exemplos novos, mantendo-os separados do treino, e registrar erros por pose/mão.
+
+### 2026-10-29 — Novas poses OUTRA coletadas com a mão direita
+
+- **Arquivo recebido:** cinco novas exportações cumulativas. A exportação mais recente, `libras-landmarks-piloto-2026-10-29 (9).json`, contém 146 amostras; todas são `OUTRA`, com 21 landmarks e coordenadas finitas.
+- **Grupos registrados:** 30 da sessão `A-teste`, 62 `B-teste`, 9 `L-teste`, 10 `Y-teste` e 35 `Aleatorio-teste`. O usuário confirmou que são poses em que a saída correta é `OUTRA`, não uma avaliação independente.
+- **Lateralidade:** 142 amostras aparecem como `Right` e 4 como `Left`, embora a coleta tenha sido feita com a direita. Metadados foram preservados para não alterar a origem exportada.
+- **Deduplicação e integração:** as cinco exportações originais foram preservadas. Foi criada `data/pilot/rejeicoes-sessao-5.json` como cópia da mais recente e o app carrega apenas essa cópia. Recarregar a página para carregar os dados.
+- **Tamanho do treino:** o total passa a 625 amostras: 140 A/B/L/Y e 485 OUTRA (267 marcadas Left e 218 Right).
+- **Próximo passo:** testar novamente as poses que antes eram confundidas, usando a mão direita; depois fazer teste independente com poses novas e registrar resultados sem adicioná-los ao treino.
+
+### 2026-10-29 — Exemplos válidos A/B/L/Y incorporados ao treino
+
+- **Arquivo recebido:** `libras-landmarks-piloto-2026-10-29 (12).json`, com 515 amostras, todas com 21 landmarks e coordenadas finitas.
+- **Distribuição:** A=132, B=139, L=129 e Y=115; 258 amostras estão marcadas `Right` e 257 `Left`. Os rótulos foram conferidos por amostra. A sessão `B-teste` contém 139 B; `A-teste` contém A, L e Y, portanto o metadado de sessão não representa uma separação limpa por letra.
+- **Decisão do usuário:** incluir as amostras válidas no conjunto de treino. Como o arquivo passou a ser usado no treino, ele não deve ser usado para medir desempenho independente, apesar de `teste` aparecer no nome das sessões.
+- **Deduplicação e integração:** o arquivo original foi preservado e copiado como `data/pilot/validos-sessao-6.json`; o app carrega essa cópia junto dos demais dados de treino.
+- **Tamanho atualizado:** 1.140 amostras no total: A=167, B=174, L=164, Y=150 e OUTRA=485.
+- **Próximo passo:** recarregar a página e observar o comportamento ao vivo. Para medir acerto, coletar uma sessão nova, separada e nunca carregada no k-NN; registrar métricas por letra e por mão.
+
+### 2026-10-29 — Organização do código e dos dados de treino
+
+- **Mudança:** os seis conjuntos de sessão usados no treino foram organizados em `data/pilot/fontes/sessoes/`; as exportações originais e cumulativas foram guardadas em `data/pilot/fontes/exportacoes/`.
+- **Consolidação:** o app agora carrega um único arquivo, `data/pilot/treino.json`, em vez de combinar vários JSONs dentro de `camera.js`. O arquivo reúne as 1.140 amostras atuais: A=167, B=174, L=164, Y=150 e OUTRA=485.
+- **Reprodução:** `scripts/build-dataset.mjs` valida rótulos, landmarks, coordenadas, lateralidade e duplicatas, e reconstrói `treino.json` a partir dos seis conjuntos de sessão. Comando: `node scripts/build-dataset.mjs` na raiz do projeto.
+- **Documentação:** `data/pilot/README.md` explica a estrutura, as contagens, como regenerar o conjunto e quais dados ainda podem ser usados para avaliação.
+- **Decisão sobre ampliar as letras:** ainda não adicionar classes. Como as sessões válidas recentes foram incorporadas ao treino, não há avaliação independente confiável das quatro letras atuais. Primeiro coletar um teste novo e separado; depois escolher uma letra estática e validá-la antes de expandir o classificador.
+- **Verificação realizada:** o script de consolidação foi executado e gerou 1.140 amostras com as contagens acima. A câmera e as previsões ao vivo ainda precisam ser conferidas após recarregar o app.
+- **Próximo passo:** recarregar a página para confirmar que `treino.json` carrega e, em seguida, coletar teste independente para A/B/L/Y e OUTRA, por mão, sem incluir essas amostras no treino.
+
+### 2026-10-29 — Validação manual após consolidar o treino
+
+- **Relato do usuário:** testou o app após atualizar o conjunto e informou que, tirando a coleta adicional de exemplos OUTRA, as demais previsões passaram bem e a apuração está muito boa. O resultado é qualitativo; não houve contagem formal de tentativas/acertos.
+- **Novo arquivo:** `data/pilot/fontes/exportacoes/libras-landmarks-piloto-2026-10-29 (13).json`, com 54 amostras, todas OUTRA, 21 landmarks válidos cada; 40 marcadas `Left` e 14 `Right`.
+- **Metadado:** a sessão está nomeada `sessao-3-teste`. O arquivo foi preservado em `fontes/exportacoes/` e ainda não foi incluído no `treino.json`, para evitar misturar dados de validação ao treino antes de confirmar seu uso.
+- **Treino atual:** continua com 1.140 amostras. A última coleta não altera as previsões até ser explicitamente classificada como treino e incorporada.
+- **Próximo passo:** decidir se as 54 amostras são exemplos de correção para adicionar ao treino ou se devem permanecer como dados de validação. Se forem treino, renomear/registrar como sessão de treino, adicioná-las à fonte consolidada e regenerar o conjunto; se forem validação, mantê-las fora do k-NN e registrar resultados de forma separada.
+
+### 2026-10-29 — Nova coleta OUTRA incorporada ao treino
+
+- **Decisão do usuário:** incluir por padrão os novos JSONs enviados. Se um conjunto tiver de ficar fora do treino para avaliação independente, o usuário avisará explicitamente.
+- **Arquivo original:** `data/pilot/fontes/exportacoes/libras-landmarks-piloto-2026-10-29 (13).json`, com 54 amostras OUTRA; lateralidade estimada: Left=40, Right=14. A sessão exportada se chama `sessao-3-teste`.
+- **Integração:** preservada cópia de treino em `data/pilot/fontes/sessoes/rejeicoes-sessao-7.json`; incluída em `scripts/build-dataset.mjs`. O app continua lendo somente o `treino.json` consolidado.
+- **Tamanho atualizado:** 1.194 amostras: A=167, B=174, L=164, Y=150 e OUTRA=539. Como essas 54 amostras entraram no treino, não são avaliação independente.
+- **Próximo passo:** recarregar o app e observar se as novas poses passam a ser rejeitadas. A avaliação formal exige uma coleta separada que não seja integrada ao treino.
+
+### 2026-10-29 — Rótulo do percentual alterado para “Apuração”
+
+- **Pedido do usuário:** o termo “Concordância” não deixava claro o significado do número; pediu para trocar para “Apuração”.
+- **Implementado:** interface e identificadores correspondentes renomeados para “Apuração”. O texto ao lado explica que o percentual é a fração dos exemplos próximos que apontou para a previsão exibida.
+- **Limite:** esse número resume os votos dos vizinhos do k-NN; não mede precisão nem representa a chance de acerto.
+
+### 2026-10-29 — k-NN alterado para 7 vizinhos
+
+- **Pedido do usuário:** experimentar o classificador com sete vizinhos em vez de cinco.
+- **Implementado:** `K_NEIGHBORS` em `classifier.js` alterado para 7. A apuração e a votação usam o total de vizinhos retornado pelo classificador.
+- **Interpretação:** a apuração agora mostra os votos entre sete exemplos próximos; isso não é percentual de acerto. Mais vizinhos podem mudar a previsão, mas não garantem melhora.
+- **Próximo passo:** recarregar o app e repetir as mesmas poses, anotando previsões erradas para comparar qualitativamente com a configuração anterior. Uma comparação objetiva exige um conjunto independente.
+
+### 2026-10-29 — Coleta preparada para as letras C, D, E e F
+
+- **Pedido do usuário:** ampliar o conjunto com mais quatro letras.
+- **Escolha:** C, D, E e F, como poses estáticas. Uma pesquisa acadêmica da UTFPR lista H, J, K, X, Y e Z como letras dinâmicas; inferimos que C/D/E/F são estáticas a partir dessa classificação. Confirmar visualmente as formas no material do INES antes de rotular amostras.
+- **Implementado:** novas classes, botões e contadores de coleta; `classifier.js` e `scripts/build-dataset.mjs` aceitam C/D/E/F. O layout da coleta se adapta a nove rótulos. Nome inicial de sessão: `sessao-8-treino-cdef`.
+- **Estado dos dados:** o modelo ainda não reconhece C/D/E/F, pois `treino.json` tem zero amostras dessas classes. O conjunto foi regenerado com 1.194 amostras existentes; a nova coleta pode começar sem misturar dados de avaliação independente.
+- **Coleta sugerida:** cerca de 30 amostras por letra, aproximadamente 15 por mão, refazendo a pose entre capturas. Rotular conforme a forma escolhida e manter as mãos equilibradas.
+- **Referência:** [UTFPR — estudo sobre reconhecimento de gestos de Libras com alfabeto manual](https://repositorio.utfpr.edu.br/jspui/bitstream/1/5018/1/luvainstrumentadagestoslibras.pdf); ver também a publicação do [INES sobre alfabeto e configurações de mãos](https://www.gov.br/ines/pt-br/central-de-conteudos/publicacoes-1/todas-as-publicacoes/alfabeto-manual-e-configuracao-de-maos).
+- **Próximo passo:** conferir as configurações C/D/E/F no alfabeto de referência, capturar exemplos rotulados, colocar o JSON da sessão em `data/pilot/fontes/sessoes/` e reconstruir `treino.json` com `node scripts/build-dataset.mjs`.
+
+### 2026-10-29 — Coleta das letras C, D, E e F adicionada
+
+- **Arquivo recebido:** exportação com 885 amostras: C=203, D=213, E=205, F=263 e A=1. Todas tinham 21 landmarks com coordenadas finitas.
+- **Correção indicada pelo usuário:** a única amostra A está rotulada incorretamente. O arquivo bruto foi preservado em `data/pilot/fontes/exportacoes/libras-landmarks-piloto-2026-10-29-sessao-8.json`; essa amostra foi excluída do conjunto de treino, sem tentar adivinhar seu rótulo correto.
+- **Integração:** 884 amostras C/D/E/F foram consolidadas em `data/pilot/fontes/sessoes/validos-sessao-8-cdef.json` e adicionadas a `scripts/build-dataset.mjs`.
+- **Metadados de sessão:** C/D/E estão sob `sessao-8-treino-cdef`; F e a amostra A errada estão sob `sessao-8-treinoCDE`. Os rótulos de classe foram usados para separar as amostras; os metadados originais foram mantidos nas amostras C/D/E/F.
+- **Distribuição:** C=203, D=213, E=205, F=263. As classes existentes A/B/L/Y/OUTRA permanecem inalteradas; o conjunto total passa a 2.078 amostras.
+- **Próximo passo:** reconstruir e recarregar o app; conferir C/D/E/F ao vivo. As novas classes ainda não tiveram validação independente.
+
+### 2026-10-29 — Mais exemplos para distinguir A e E
+
+- **Motivo relatado pelo usuário:** A e E têm formatos parecidos; coletou exemplos adicionais para ajudar o classificador a separá-las.
+- **Arquivo original:** `data/pilot/fontes/exportacoes/libras-landmarks-piloto-2026-10-29-sessao-9-a-e.json`, com 402 amostras válidas (A=182, E=220), todas com 21 landmarks e coordenadas finitas; ambas as mãos estão representadas.
+- **Integração:** copiadas para `data/pilot/fontes/sessoes/validos-sessao-9-a-e.json` e adicionadas ao compilador. A coleta não continha outros rótulos nem duplicatas de captura.
+- **Tamanho atualizado:** 2.480 amostras: A=349, B=174, C=203, D=213, E=425, F=263, L=164, Y=150 e OUTRA=539.
+- **Próximo passo:** reconstruir e recarregar o app para testar novamente as mesmas poses A/E e observar se diminui a confusão. Ainda não há medição independente de acerto.
+
+### 2026-10-29 — Teste manual aprovado e filtro temporal
+
+- **Relato do usuário:** depois de atualizar os exemplos A/E, fez novos testes e informou que tudo passou. Não foram informadas quantidades de tentativas, então o resultado fica registrado como validação manual qualitativa.
+- **Implementado:** filtro temporal em `camera.js`: a mesma classe precisa aparecer em pelo menos 3 dos últimos 5 quadros para ser exibida. A janela é reiniciada quando a mão some, a lateralidade muda ou a detecção para.
+- **Apuração:** continua mostrando a votação espacial dos 7 vizinhos do quadro atual. A previsão exibida pode ser filtrada entre quadros; os dois valores têm significados diferentes.
+- **Checklist:** implementação do filtro temporal concluída; falta conferi-lo ao vivo e avaliar o atraso percebido. Ainda não há teste independente com métrica de acerto.
+- **Próximo passo:** recarregar e conferir se as letras permanecem estáveis sem atraso excessivo. Se o comportamento estiver bom, avançar para confirmar letras e compor texto curto.
+
+### 2026-10-29 — Reforço da letra A com a mão esquerda
+
+- **Observação do usuário:** nos testes manuais após a coleta A/E, a letra A não estava sendo reconhecida corretamente com a mão esquerda, embora as outras combinações testadas tenham passado.
+- **Novo conjunto:** exportação original com 43 amostras, todas rotuladas A e marcadas Left, com 21 landmarks e coordenadas finitas.
+- **Integração:** original preservado em `data/pilot/fontes/exportacoes/libras-landmarks-piloto-2026-10-29-sessao-10-a-esquerda.json`; cópia de treino em `data/pilot/fontes/sessoes/validos-sessao-10-a-esquerda.json` e adicionada ao compilador.
+- **Tamanho atualizado:** 2.523 amostras; A sobe de 349 para 392. As demais contagens permanecem iguais.
+- **Próximo passo:** reconstruir e recarregar o app; testar A com a mão esquerda e conferir também se o filtro temporal não atrasa demais a previsão.
+
+### 2026-10-29 — Próximas letras: G, I, M e O
+
+- **Pedido do usuário:** continuar expandindo o alfabeto com mais quatro letras.
+- **Escolha:** G, I, M e O. A referência acadêmica consultada lista H, J, K, X, Y e Z como dinâmicas; inferimos que G/I/M/O são estáticas e devem ser confirmadas visualmente no material institucional antes da coleta.
+- **Implementado:** rótulos, contadores e botões de coleta; o classificador e o compilador de dados aceitam as novas classes. A sessão proposta é `sessao-11-treino-gimo`.
+- **Estado dos dados:** nenhum exemplo G/I/M/O foi adicionado ainda. O treino permanece com 2.523 amostras e não prevê essas classes até haver amostras rotuladas.
+- **Coleta sugerida:** cerca de 30 amostras por letra, equilibrando as duas mãos e refazendo a pose entre capturas.
+- **Próximo passo:** conferir as configurações G/I/M/O e coletar os exemplos; então guardar a exportação original, integrá-la como sessão de treino e reconstruir `treino.json`.
+
+### 2026-10-29 — Ponto de parada da sessão
+
+- **Relato do usuário:** depois de adicionar os 43 exemplos A/Left, informou que validou e passou. Não informou quantidade de tentativas ou taxa de acerto; registrar como resultado qualitativo.
+- **Estado do treino:** `data/pilot/treino.json` contém 2.523 amostras: A=392, B=174, C=203, D=213, E=425, F=263, L=164, Y=150 e OUTRA=539.
+- **Estado do código:** k-NN com 7 vizinhos; filtro temporal de 3 previsões iguais em 5 quadros; coleta preparada para G/I/M/O.
+- **Ainda pendente:** coletar exemplos rotulados G/I/M/O (meta inicial de cerca de 30 por letra, equilibrando as mãos), recarregar e testar essa nova versão; medir atraso/estabilidade do filtro se ainda não foi observado; fazer avaliação independente separada do treino.
+- **Retomada:** começar conferindo as formas de G/I/M/O na referência institucional. Depois da coleta, preservar o JSON original, adicionar a sessão em `data/pilot/fontes/sessoes/`, incluir no compilador e reconstruir `treino.json`. Não incluir dados de avaliação independente no treino sem autorização explícita.
+- **Pausa:** o usuário pediu para parar aqui; nesta atualização foram alterados somente arquivos Markdown.
 
 ---
 

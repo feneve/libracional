@@ -20,13 +20,15 @@ const datasetMessage = document.querySelector('#dataset-message');
 const exportButton = document.querySelector('#export-dataset');
 const clearDatasetButton = document.querySelector('#clear-dataset');
 const predictionOutput = document.querySelector('#prediction-output');
-const predictionAgreement = document.querySelector('#prediction-agreement');
+const predictionTally = document.querySelector('#prediction-tally');
 const predictionDetail = document.querySelector('#prediction-detail');
 
 const MEDIAPIPE_VERSION = '0.10.21';
 const MEDIAPIPE_MODULE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/vision_bundle.mjs`;
 const MEDIAPIPE_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
 const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const TEMPORAL_WINDOW = 5;
+const TEMPORAL_MIN_VOTES = 3;
 const HAND_CONNECTIONS = [
   [0, 1], [1, 2], [2, 3], [3, 4],
   [0, 5], [5, 6], [6, 7], [7, 8],
@@ -44,32 +46,49 @@ let isTracking = false;
 let latestLandmarks = null;
 let latestHandedness = null;
 let knnModel = null;
+let temporalHandedness = null;
+const recentPredictions = [];
 const collectedSamples = [];
 
 async function loadKnnModel() {
   if (knnModel) return;
-  const datasetUrl = new URL('./data/pilot/treino-sessao-1.json', import.meta.url);
+  const datasetUrl = new URL('./data/pilot/treino.json', import.meta.url);
   const response = await fetch(datasetUrl);
   if (!response.ok) throw new Error(`não encontrei o dataset (${response.status})`);
   const dataset = await response.json();
-  const rejectionUrl = new URL('./data/pilot/rejeicoes.json', import.meta.url);
-  const rejectionResponse = await fetch(rejectionUrl);
-  if (rejectionResponse.ok) {
-    const rejectionDataset = await rejectionResponse.json();
-    dataset.samples.push(...(rejectionDataset.samples ?? []));
-  }
-  const rightHandRejectionUrl = new URL('./data/pilot/testedireita.json', import.meta.url);
-  const rightHandRejectionResponse = await fetch(rightHandRejectionUrl);
-  if (rightHandRejectionResponse.ok) {
-    const rightHandRejectionDataset = await rightHandRejectionResponse.json();
-    dataset.samples.push(...(rightHandRejectionDataset.samples ?? []));
-  }
   knnModel = createKnnModel(dataset);
 }
 
+function resetTemporalPredictions() {
+  recentPredictions.length = 0;
+  temporalHandedness = null;
+}
+
+function stabilizePrediction(label, handedness) {
+  if (temporalHandedness !== handedness) {
+    recentPredictions.length = 0;
+    temporalHandedness = handedness;
+  }
+
+  recentPredictions.push(label);
+  if (recentPredictions.length > TEMPORAL_WINDOW) recentPredictions.shift();
+
+  const votes = new Map();
+  for (const recentLabel of recentPredictions) {
+    if (recentLabel) votes.set(recentLabel, (votes.get(recentLabel) ?? 0) + 1);
+  }
+  const [topLabel, topVotes] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0] ?? [null, 0];
+
+  return {
+    label: topVotes >= TEMPORAL_MIN_VOTES ? topLabel : null,
+    votes: topVotes,
+    frameCount: recentPredictions.length,
+  };
+}
+
 function updateDatasetControls() {
-  const counts = { A: 0, B: 0, L: 0, Y: 0, OUTRA: 0 };
-  const targets = { A: 30, B: 30, L: 30, Y: 30, OUTRA: 20 };
+  const counts = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0, G: 0, I: 0, L: 0, M: 0, O: 0, Y: 0, OUTRA: 0 };
+  const targets = { A: 30, B: 30, C: 30, D: 30, E: 30, F: 30, G: 30, I: 30, L: 30, M: 30, O: 30, Y: 30, OUTRA: 20 };
   for (const sample of collectedSamples) counts[sample.label] += 1;
 
   for (const label of Object.keys(counts)) {
@@ -113,8 +132,8 @@ function exportDataset() {
 
   const exportObject = {
     formatVersion: 1,
-    description: 'Landmarks do MediaPipe para estudo de A/B/L/Y e poses fora dessas classes. Não contém imagens.',
-    classes: ['A', 'B', 'L', 'Y', 'OUTRA'],
+    description: 'Landmarks do MediaPipe para estudo de A/B/C/D/E/F/G/I/L/M/O/Y e poses fora dessas classes. Não contém imagens.',
+    classes: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I', 'L', 'M', 'O', 'Y', 'OUTRA'],
     samples: collectedSamples,
   };
   const blob = new Blob([JSON.stringify(exportObject, null, 2)], { type: 'application/json' });
@@ -145,6 +164,7 @@ function clearHandOverlay() {
 
 function stopHandTracking() {
   isTracking = false;
+  resetTemporalPredictions();
   if (animationFrame !== null) {
     cancelAnimationFrame(animationFrame);
     animationFrame = null;
@@ -155,7 +175,7 @@ function stopHandTracking() {
   latestHandedness = null;
   predictionOutput.textContent = '—';
   predictionOutput.dataset.other = 'false';
-  predictionAgreement.textContent = '—';
+  predictionTally.textContent = '—';
   predictionDetail.textContent = knnModel
     ? 'Detecção parada. O conjunto local continua carregado.'
     : 'Detecção parada.';
@@ -272,29 +292,33 @@ function trackVideoFrame() {
       handMessage.textContent = `Mão detectada: ${landmarks.length} pontos · MediaPipe: ${latestHandedness} (conferido neste notebook).`;
       if (knnModel && (latestHandedness === 'Left' || latestHandedness === 'Right')) {
         const prediction = predictLetter(knnModel, landmarks, latestHandedness);
-        predictionOutput.dataset.other = prediction.label === 'OUTRA' ? 'true' : 'false';
-        predictionOutput.textContent = prediction.label === 'OUTRA' ? 'OUTRA' : prediction.label ?? '?';
+        const stablePrediction = stabilizePrediction(
+          prediction.isUncertain ? null : prediction.label,
+          latestHandedness,
+        );
+        predictionOutput.dataset.other = stablePrediction.label === 'OUTRA' ? 'true' : 'false';
+        predictionOutput.textContent = stablePrediction.label ?? '?';
         const agreement = Math.round((prediction.votes / prediction.neighborCount) * 100);
-        predictionAgreement.textContent = `${agreement}%`;
-        predictionDetail.textContent = prediction.isUncertain
-          ? `Incerto: ${prediction.votes}/${prediction.neighborCount} exemplos próximos votaram em ${prediction.topLabel}. A porcentagem é concordância, não chance calibrada.`
-          : prediction.label === 'OUTRA'
-            ? `${prediction.votes}/${prediction.neighborCount} exemplos próximos indicam uma pose fora de A/B/L/Y.`
-            : `${prediction.votes}/${prediction.neighborCount} exemplos próximos concordam. A porcentagem não é uma chance calibrada de acerto.`;
+        predictionTally.textContent = `${agreement}%`;
+        predictionDetail.textContent = stablePrediction.label
+          ? `Previsão estabilizada: ${stablePrediction.label} apareceu em ${stablePrediction.votes} dos últimos ${stablePrediction.frameCount} quadros. Apuração deste quadro: ${prediction.votes} de ${prediction.neighborCount} vizinhos apontaram para ${prediction.topLabel}.`
+          : `Aguardando estabilidade: a mesma previsão precisa aparecer em ${TEMPORAL_MIN_VOTES} dos últimos ${TEMPORAL_WINDOW} quadros. Apuração deste quadro: ${prediction.votes} de ${prediction.neighborCount} vizinhos apontaram para ${prediction.topLabel}.`;
       } else if (knnModel) {
+        resetTemporalPredictions();
         predictionOutput.textContent = '?';
-      predictionOutput.dataset.other = 'false';
-        predictionAgreement.textContent = '—';
+        predictionOutput.dataset.other = 'false';
+        predictionTally.textContent = '—';
         predictionDetail.textContent = 'Não consegui identificar a lateralidade desta mão.';
       }
     } else {
       latestLandmarks = null;
       latestHandedness = null;
+      resetTemporalPredictions();
       clearHandOverlay();
       handMessage.textContent = 'Nenhuma mão detectada. Tente deixar a mão inteira visível e mais iluminada.';
       predictionOutput.textContent = '—';
       predictionOutput.dataset.other = 'false';
-      predictionAgreement.textContent = '—';
+      predictionTally.textContent = '—';
       predictionDetail.textContent = 'Sem mão detectada; nenhuma letra prevista.';
     }
     updateDatasetControls();
@@ -335,6 +359,7 @@ async function startHandTracking() {
     }
 
     isTracking = true;
+    resetTemporalPredictions();
     lastVideoTime = -1;
     lastDetectionAt = 0;
     frame.classList.add('is-tracking');
@@ -343,7 +368,7 @@ async function startHandTracking() {
     if (!knnModel) {
       predictionOutput.textContent = '—';
       predictionOutput.dataset.other = 'false';
-      predictionAgreement.textContent = '—';
+      predictionTally.textContent = '—';
     }
     updateDatasetControls();
     animationFrame = requestAnimationFrame(trackVideoFrame);

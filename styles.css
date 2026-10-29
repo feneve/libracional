@@ -68,9 +68,9 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .prediction-label { margin: 0; color: #68766d; font-size: 10px; }
 .prediction-card > #prediction-output { grid-column: 2; grid-row: 2 / 4; min-width: 40px; color: #315f4e; text-align: center; font: 800 25px 'Segoe UI', sans-serif; }
 .prediction-card > #prediction-output[data-other="true"] { min-width: 64px; font-size: 12px; }
-.agreement-block { display: flex; grid-column: 3; grid-row: 2 / 4; flex-direction: column; align-items: center; gap: 2px; min-width: 68px; padding-left: 10px; border-left: 1px solid #e5ebe3; }
-.agreement-block span { color: #849087; font-size: 8px; }
-.agreement-block strong { color: #52685a; font: 700 14px 'Segoe UI', sans-serif; }
+.tally-block { display: flex; grid-column: 3; grid-row: 2 / 4; flex-direction: column; align-items: center; gap: 2px; min-width: 68px; padding-left: 10px; border-left: 1px solid #e5ebe3; }
+.tally-block span { color: #849087; font-size: 8px; }
+.tally-block strong { color: #52685a; font: 700 14px 'Segoe UI', sans-serif; }
 .prediction-detail { grid-column: 1 / -1; margin: 2px 0 0; color: #8a938d; font-size: 9px; line-height: 1.4; }
 .dataset-card { margin-top: 17px; padding-top: 16px; border-top: 1px solid #ecece7; }
 .dataset-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
@@ -112,4 +112,4 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .footer-separator { color: #c0c4be; }
 .footer-note { margin-left: auto; }
 @media (max-width: 760px) { .app-shell { padding: 0 20px; } .workspace { grid-template-columns: 1fr; } .side-panel { display: grid; grid-template-columns: 1fr 1fr; } .lesson-card { min-height: 185px; } .lesson-number { margin-bottom: 18px; } }
-@media (max-width: 520px) { .app-shell { padding: 0 15px; } .topbar { height: 68px; } .brand { font-size: 16px; } .phase-label { font-size: 10px; } .intro { padding-top: 35px; } .camera-panel { padding: 14px; } .video-frame { aspect-ratio: 4 / 3; } .side-panel { grid-template-columns: 1fr; } .lesson-card { min-height: 0; } .lesson-number { margin-bottom: 15px; } .footer-note { display: none; } }
+@media (max-width: 520px) { .app-shell { padding: 0 15px; } .topbar { height: 68px; } .brand { font-size: 16px; } .phase-label { font-size: 10px; } .intro { padding-top: 35px; } .camera-panel { padding: 14px; } .video-frame { aspect-ratio: 4 / 3; } .capture-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .side-panel { grid-template-columns: 1fr; } .lesson-card { min-height: 0; } .lesson-number { margin-bottom: 15px; } .footer-note { display: none; } }
