@@ -58,6 +58,12 @@ async function loadKnnModel() {
     const rejectionDataset = await rejectionResponse.json();
     dataset.samples.push(...(rejectionDataset.samples ?? []));
   }
+  const rightHandRejectionUrl = new URL('./data/pilot/testedireita.json', import.meta.url);
+  const rightHandRejectionResponse = await fetch(rightHandRejectionUrl);
+  if (rightHandRejectionResponse.ok) {
+    const rightHandRejectionDataset = await rightHandRejectionResponse.json();
+    dataset.samples.push(...(rightHandRejectionDataset.samples ?? []));
+  }
   knnModel = createKnnModel(dataset);
 }
 
@@ -318,8 +324,11 @@ async function startHandTracking() {
     try {
       await loadKnnModel();
       const otherCount = knnModel.samples.filter((sample) => sample.label === 'OUTRA').length;
+      const rightHandOtherCount = knnModel.samples.filter(
+        (sample) => sample.label === 'OUTRA' && sample.handedness === 'Right',
+      ).length;
       predictionDetail.textContent = otherCount > 0
-        ? `k-NN carregado com ${knnModel.samples.length} exemplos, incluindo ${otherCount} OUTRA.`
+        ? `k-NN carregado com ${knnModel.samples.length} exemplos, incluindo ${otherCount} OUTRA (${rightHandOtherCount} da mão direita).`
         : `k-NN carregado com ${knnModel.samples.length} exemplos. Ainda sem exemplos OUTRA, então poses desconhecidas podem ser confundidas.`;
     } catch (error) {
       predictionDetail.textContent = `Detector pronto, mas não carreguei o classificador: ${error.message}.`;

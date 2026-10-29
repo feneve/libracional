@@ -2,8 +2,8 @@
 
 > Roteiro de construção passo a passo. Atualizar o checklist e o registro de decisões ao concluir cada etapa, para que o projeto possa ser retomado em outra sessão.
 
-**Última atualização:** 26/10/2026  
-**Status geral:** Protótipo web local funcional: webcam, landmarks e classificador A/B/L/Y/OUTRA já foram experimentados pelo usuário. A rejeição de poses inválidas funciona nas amostras testadas com a mão esquerda, mas falha em algumas tentativas com a direita; avaliação independente ainda pendente.  
+**Última atualização:** 28/10/2026  
+**Status geral:** Protótipo web local funcional: webcam, landmarks e classificador A/B/L/Y/OUTRA já foram experimentados pelo usuário. Após adicionar exemplos OUTRA da mão direita, o usuário relatou melhora nessa mão, mas ainda há previsões erradas em algumas poses com ambas as mãos. A avaliação independente ainda está pendente.  
 **Objetivo:** construir um protótipo local de estudo que use a câmera do celular para reconhecer algumas letras estáticas do alfabeto manual de Libras.
 
 ---
@@ -448,6 +448,22 @@ Consultadas em 26/10/2026; planos e limites podem mudar.
 - **Plano de melhoria:** fazer uma coleta adicional de poses `OUTRA` com a mão direita, alternando deliberadamente várias formas inválidas e registrando categorias simples na próxima vez. Em seguida, testar poses novas de ambas as mãos sem misturar os exemplos de teste no treino. Não é necessário refazer as 51 amostras atuais.
 - **Estado do projeto:** há um protótipo didático funcional, mas ainda não há evidência suficiente para dizer que o reconhecimento é confiável. As previsões erradas anteriores (por exemplo, poses inválidas confundidas com B/A/Y) seguem como falhas conhecidas a acompanhar.
 - **Próximo passo ao retomar:** revisar a interface/contagem depois da atualização e planejar uma sessão curta `OUTRA` para a mão direita; manter as letras de teste numa sessão separada.
+
+### 2026-10-28 — Exemplos OUTRA da mão direita adicionados
+
+- **Arquivo conferido:** `data/pilot/testedireita.json`.
+- **Estrutura:** 74 amostras, todas rotuladas `OUTRA`, com 21 landmarks cada e lateralidade `Right`; não há imagens. A sessão registrada no arquivo é `sessao-3-outra-direita teste`.
+- **Integração:** o protótipo agora carrega este arquivo junto com `treino-sessao-1.json` e `rejeicoes.json`. A interface informa a quantidade total de exemplos OUTRA e quantos são da mão direita; o conjunto carregado passa a ter 265 amostras.
+- **Limite:** isso amplia o treino para a mão direita, mas não prova que o classificador rejeita poses inválidas novas. A palavra `teste` no nome da sessão não torna o arquivo uma avaliação independente; ele está sendo usado no treino.
+- **Próximo passo:** recarregar o app e conferir ao vivo poses OUTRA com a mão direita. Depois, coletar teste independente, mantendo os exemplos de teste fora dos três arquivos de treino.
+
+### 2026-10-28 — Melhora percebida e próximos ajustes
+
+- **Evidência relatada pelo usuário:** depois de recarregar e testar, a rejeição melhorou com a mão direita; algumas posições ainda geram previsões incorretas tanto com a esquerda quanto com a direita. Não foram anotadas contagens de acertos/erros, então esta é uma observação qualitativa, não uma métrica.
+- **Processo combinado:** continuar alimentando o conjunto de treino com exemplos rotulados em JSON. Antes de capturar um erro, anotar a pose feita, a previsão exibida, a mão usada e o rótulo correto; capturar como `OUTRA` se a pose não corresponder a A/B/L/Y, ou com a letra correta se for uma pose válida classificada errado. Manter os arquivos de teste independente fora do classificador.
+- **Limite do processo:** exemplos adicionais podem ajudar o k-NN a cobrir poses parecidas, mas não garantem reconhecimento geral. Repetir a avaliação em poses novas para verificar se a melhora se mantém.
+- **Direção futura discutida:** Flutter poderá reutilizar o protótipo web numa WebView ou portar o fluxo para processamento local no app (câmera, MediaPipe e classificador). Não foi tomada decisão de arquitetura; primeiro validar melhor os dados e o reconhecimento no protótipo.
+- **Próximo passo:** registrar erros recorrentes e coletar exemplos de treino específicos para eles, sem misturar os dados reservados para avaliação independente.
 
 ---
 
